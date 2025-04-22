@@ -1,6 +1,6 @@
 function Footer() {
 	return (
-		<footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 fixed bottom-0 w-full">
+		<footer className="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 bottom-0 w-full">
 			<aside>
 				<p>
 					Copyright © {new Date().getFullYear()} - Made with ❤️ by{' '}
