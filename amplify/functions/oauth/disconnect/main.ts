@@ -2,7 +2,7 @@ import { Schema } from '../../../data/resource'
 import { Amplify } from 'aws-amplify'
 import { generateClient } from 'aws-amplify/data'
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime'
-import { env } from '$amplify/env/send-slack-message'
+import { env } from '$amplify/env/disconnect-from-oauth'
 import { oauthProviders } from '../../utils/providerConfig'
 const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env)
 
@@ -10,13 +10,14 @@ Amplify.configure(resourceConfig, libraryOptions)
 
 const client = generateClient<Schema>()
 
-export const handler: Schema['disconnectFromSlack']['functionHandler'] = async (
+export const handler: Schema['disconnectFromOauth']['functionHandler'] = async (
 	event
 ) => {
-	console.log('Disconnecting from Slack', event.arguments)
+	console.log('Disconnecting from Provider', event.arguments)
 
 	const user = await client.models.User.get({ id: event.arguments.userId })
-	const accessToken = user.data?.providers?.slack?.oauth?.accessToken
+	const accessToken =
+		user.data?.providers?.[event.arguments.provider]?.oauth?.accessToken
 	const provider = event.arguments.provider as keyof typeof oauthProviders
 
 	if (!accessToken) {
@@ -63,7 +64,7 @@ export const handler: Schema['disconnectFromSlack']['functionHandler'] = async (
 	}
 
 	// Handle the provider-specific disconnection logic
-	await revokeOAuthToken(oauthProviders.slack.disconnectUrl, accessToken)
+	await revokeOAuthToken(oauthProviders[provider].disconnectUrl, accessToken)
 
 	// Remove the provider from the user's account
 	const result = await removeProviderFromUser(event.arguments.userId, provider)

@@ -2,7 +2,7 @@ import { type Schema } from '../../../data/resource'
 import { Amplify } from 'aws-amplify'
 import { generateClient } from 'aws-amplify/data'
 import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime'
-import { env } from '$amplify/env/slack-callback'
+import { env } from '$amplify/env/oauth-callback'
 import { LambdaFunctionURLHandler } from 'aws-lambda'
 import { oauthProviders } from '../../utils/providerConfig'
 
@@ -54,7 +54,10 @@ export const handler: LambdaFunctionURLHandler = async (
 	params.append('code', code)
 	params.append('redirect_uri', oauthProviders[provider].redirectUri)
 	params.append('client_id', oauthProviders[provider].clientId)
-	params.append('client_secret', env.SLACK_CLIENT_SECRET!)
+	params.append(
+		'client_secret',
+		env[`${provider.toUpperCase()}_CLIENT_SECRET` as keyof typeof env]!
+	)
 
 	const res = await fetch(oauthProviders[provider].accessTokenEndpoint, {
 		method: 'POST',
@@ -66,7 +69,7 @@ export const handler: LambdaFunctionURLHandler = async (
 	const data = await res.json()
 
 	if (!data.ok) {
-		console.log('the not ok data from slack', data)
+		console.log('the not ok data from provider', data)
 		return {
 			statusCode: 302,
 			headers: {
@@ -76,12 +79,12 @@ export const handler: LambdaFunctionURLHandler = async (
 	}
 
 	//4. save the access token to the database
-	console.log('the ok data from slack', data)
+	console.log('the ok data from provider', data)
 	if (data.ok && data.authed_user.access_token) {
 		await client.models.User.update({
 			id: userId,
 			providers: {
-				slack: {
+				[provider]: {
 					oauth: {
 						accessToken: data.authed_user.access_token,
 						refreshToken: data.authed_user.refresh_token,

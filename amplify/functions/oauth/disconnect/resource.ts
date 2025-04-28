@@ -1,7 +1,7 @@
 import { defineFunction } from '@aws-amplify/backend'
 
-export const disconnectFromSlack = defineFunction({
-	name: 'disconnect-from-slack',
+export const disconnectFromOauth = defineFunction({
+	name: 'disconnect-from-oauth',
 	resourceGroupName: 'data',
 	entry: './main.ts',
 	runtime: 22,

@@ -1,10 +1,11 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend'
 import { postConfirmation } from '../functions/postConfirmation/resource'
-import { authorizeSlackOauth } from '../functions/slack/authorizeOauth/resource'
-import { slackCallback } from '../functions/slack/callback/resource'
 import { sendSlackMessage } from '../functions/slack/sendSlackMessage/resource'
-import { disconnectFromSlack } from '../functions/slack/disconnectFromSlack/resource'
 import { fetchSlackChannels } from '../functions/slack/fetchSlackChannels/resource'
+import { generateOauthAuthorizationUrl } from '../functions/oauth/authorize/resource'
+import { disconnectFromOauth } from '../functions/oauth/disconnect/resource'
+import { oauthCallback } from '../functions/oauth/callback/resource'
+
 const schema = a
 	.schema({
 		Oauth: a.customType({
@@ -13,8 +14,9 @@ const schema = a
 			scope: a.string(),
 			expiresAt: a.integer(),
 		}),
-		SupportedProviders: a.enum(['slack']),
+		SupportedProviders: a.enum(['slack']), //* Which providers are supported
 		Providers: a.customType({
+			//* The providers that the user has connected (providers are configured in the providerConfig.ts file)
 			slack: a.customType({
 				oauth: a.ref('Oauth'),
 				metadata: a.customType({
@@ -47,21 +49,21 @@ const schema = a
 			})
 			.authorization((allow) => [allow.group('NONE')])
 			.secondaryIndexes((index) => [index('userId')]),
-		authorizeSlack: a
+		generateOauthAuthorizationUrl: a
 			.mutation()
-			.handler(a.handler.function(authorizeSlackOauth))
+			.handler(a.handler.function(generateOauthAuthorizationUrl))
 			.arguments({
 				userId: a.string().required(),
 				provider: a.ref('SupportedProviders'),
 			})
 			.returns(a.customType({ authorizationUrl: a.url() }))
 			.authorization((allow) => [allow.authenticated()]),
-		disconnectFromSlack: a
+		disconnectFromOauth: a
 			.mutation()
-			.handler(a.handler.function(disconnectFromSlack))
+			.handler(a.handler.function(disconnectFromOauth))
 			.arguments({
 				userId: a.string().required(),
-				provider: a.ref('SupportedProviders'),
+				provider: a.ref('SupportedProviders').required(),
 			})
 			.returns(a.customType({ success: a.boolean(), message: a.string() }))
 			.authorization((allow) => [allow.authenticated()]),
@@ -86,10 +88,10 @@ const schema = a
 	})
 	.authorization((allow) => [
 		allow.resource(postConfirmation).to(['mutate']),
-		allow.resource(authorizeSlackOauth).to(['mutate']),
-		allow.resource(slackCallback).to(['mutate', 'query']),
+		allow.resource(generateOauthAuthorizationUrl).to(['mutate']),
+		allow.resource(oauthCallback).to(['mutate', 'query']),
 		allow.resource(sendSlackMessage).to(['mutate', 'query']),
-		allow.resource(disconnectFromSlack).to(['mutate', 'query']),
+		allow.resource(disconnectFromOauth).to(['mutate', 'query']),
 		allow.resource(fetchSlackChannels).to(['mutate', 'query']),
 	])
 

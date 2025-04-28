@@ -2,10 +2,10 @@ import { defineBackend } from '@aws-amplify/backend'
 import { auth } from './auth/resource'
 import { data } from './data/resource'
 import { postConfirmation } from './functions/postConfirmation/resource'
-import { authorizeSlackOauth } from './functions/slack/authorizeOauth/resource'
-import { slackCallback } from './functions/slack/callback/resource'
+import { generateOauthAuthorizationUrl } from './functions/oauth/authorize/resource'
+import { oauthCallback } from './functions/oauth/callback/resource'
 import { sendSlackMessage } from './functions/slack/sendSlackMessage/resource'
-import { disconnectFromSlack } from './functions/slack/disconnectFromSlack/resource'
+import { disconnectFromOauth } from './functions/oauth/disconnect/resource'
 import { fetchSlackChannels } from './functions/slack/fetchSlackChannels/resource'
 import { FunctionUrlAuthType } from 'aws-cdk-lib/aws-lambda'
 
@@ -13,9 +13,9 @@ const backend = defineBackend({
 	auth,
 	data,
 	postConfirmation,
-	authorizeSlackOauth,
-	slackCallback,
-	disconnectFromSlack,
+	generateOauthAuthorizationUrl,
+	oauthCallback,
+	disconnectFromOauth,
 	sendSlackMessage,
 	fetchSlackChannels,
 })
@@ -28,14 +28,14 @@ cfnOauthStateTable.timeToLiveAttribute = {
 	enabled: true,
 }
 
-const slackCallbackLambda = backend.slackCallback.resources.lambda
+const oauthCallbackLambda = backend.oauthCallback.resources.lambda
 
-const lambdafUrl = slackCallbackLambda.addFunctionUrl({
+const lambdafUrl = oauthCallbackLambda.addFunctionUrl({
 	authType: FunctionUrlAuthType.NONE,
 })
 
 backend.addOutput({
 	custom: {
-		slackCallbackUrl: lambdafUrl.url,
+		oauthCallbackUrl: lambdafUrl.url,
 	},
 })

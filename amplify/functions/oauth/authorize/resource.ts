@@ -8,6 +8,6 @@ export const generateOauthAuthorizationUrl = defineFunction({
 	environment: {
 		// https://docs.amplify.aws/react/deploy-and-host/fullstack-branching/secrets-and-vars/#local-environment-2
 		SLACK_CLIENT_ID: process.env.SLACK_CLIENT_ID as string,
-		SLACK_REDIRECT_URI: process.env.SLACK_REDIRECT_URI as string,
+		REDIRECT_URI: process.env.REDIRECT_URI as string,
 	},
 })

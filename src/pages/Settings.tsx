@@ -26,8 +26,9 @@ function Settings() {
 	}, [accessToken])
 
 	const handleAuthorizeSlack = async () => {
-		const res = await client.mutations.authorizeSlack({
+		const res = await client.mutations.generateOauthAuthorizationUrl({
 			userId: userId,
+			provider: 'slack',
 		})
 		if (res.data?.authorizationUrl) {
 			window.location.href = res.data.authorizationUrl
@@ -35,8 +36,9 @@ function Settings() {
 	}
 
 	const handleDisconnectSlack = async () => {
-		const res = await client.mutations.disconnectFromSlack({
+		const res = await client.mutations.disconnectFromOauth({
 			userId: userId,
+			provider: 'slack',
 		})
 		if (res.data?.success) {
 			setHasSlackToken(false)
